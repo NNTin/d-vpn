@@ -1,24 +1,44 @@
-$ErrorActionPreference = 'Stop'
-
 <#
 .SYNOPSIS
-Runs all service startup tests in sequence with summary reporting.
+Runs service startup tests with optional integration coverage.
 
 .DESCRIPTION
 Executes the Keycloak, WireGuard, and sync service Pester test files. The script
 verifies prerequisites (Pester module, Docker Compose, running services) before
 running each test file. All tests run even if one fails, and a summary table is
-printed at the end. Exit code is 0 when all tests pass; otherwise 1.
+printed at the end. Exit code is 0 when all tests pass; otherwise 1. Use
+IncludeIntegration to append the end-to-end integration test, or IntegrationOnly
+to run just that test.
 
 .EXAMPLE
 pwsh ./tests/Run-IndividualTests.ps1
+
+.EXAMPLE
+pwsh ./tests/Run-IndividualTests.ps1 -IncludeIntegration
+
+.EXAMPLE
+pwsh ./tests/Run-IndividualTests.ps1 -IntegrationOnly
 #>
+
+[CmdletBinding()]
+param(
+    [Parameter()][switch]$IncludeIntegration,
+    [Parameter()][switch]$IntegrationOnly
+)
+
+$ErrorActionPreference = 'Stop'
 
 $testFiles = @(
     'KeycloakStartup.Tests.ps1',
     'WireGuardStartup.Tests.ps1',
     'SyncService.Tests.ps1'
 )
+
+if ($IntegrationOnly) {
+    $testFiles = @('Invoke-IntegrationTest.ps1')
+} elseif ($IncludeIntegration) {
+    $testFiles += 'Invoke-IntegrationTest.ps1'
+}
 
 if (-not (Get-Module -Name Pester -ListAvailable)) {
     Write-Error "Pester module not found. Install with: Install-Module -Name Pester -Force -AllowClobber"
@@ -45,6 +65,12 @@ if ($LASTEXITCODE -ne 0) {
     } catch {
         Write-Warning "Failed to parse compose status output: $composePsOutput"
     }
+}
+
+$runIntegration = $testFiles -contains 'Invoke-IntegrationTest.ps1'
+if ($runIntegration) {
+    Write-Warning "Running integration test - this will restart all services and remove volumes"
+    Start-Sleep -Seconds 3
 }
 
 $results = @()
@@ -86,6 +112,9 @@ Write-Host "`nSummary:"
 $results | Format-Table -AutoSize
 Write-Host ""
 Write-Host ("Totals: Passed {0}, Failed {1}, Skipped {2}" -f $totalPassed, $totalFailed, $totalSkipped)
+if ($runIntegration) {
+    Write-Host "Note: Integration test included (E2E validation)"
+}
 
 if ($totalFailed -gt 0) {
     exit 1

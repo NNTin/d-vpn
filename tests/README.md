@@ -20,6 +20,11 @@ This Pester-based suite verifies automated bootstrap and configuration of the d-
 - WireGuard: `pwsh ./tests/WireGuardStartup.Tests.ps1`
 - Sync service: `pwsh ./tests/SyncService.Tests.ps1`
 
+### Running integration test
+- `pwsh ./tests/Invoke-IntegrationTest.ps1`
+- Performs a clean start (`docker compose down -v`), restarts all services, and validates the full flow; expect ~2-5 minutes runtime.
+- Removes all volumes and restarts services as part of setup—ensure no important local state is needed before running.
+
 ### Interpreting results
 - Pester output reports Passed/Failed/Skipped counts and durations. A non-zero exit code from the runner or individual files indicates at least one failure; investigate detailed test output to identify which checks failed.
 
@@ -33,6 +38,8 @@ This Pester-based suite verifies automated bootstrap and configuration of the d-
 | Sync Service | Container status | Container present and running |
 | Sync Service | API health     | `/health` returns healthy; `/peers` responds with JSON |
 | Sync Service | Internal state | State file exists and is valid JSON; critical env vars present; container can reach Headscale health endpoint |
+| Integration | E2E Flow | Headscale user creation; preauth key generation; node registration; sync service detection (30s poll); WireGuard peer creation; peer config retrieval; config format validation |
+| Integration | Network | Peer IP allocated in 10.13.13.0/24 subnet; peer config contains correct server endpoint (10.13.13.1:51820); AllowedIPs matches subnet |
 
 ## Future Enhancements
 - [ ] Keycloak: Verify OIDC token generation for testuser
@@ -43,10 +50,25 @@ This Pester-based suite verifies automated bootstrap and configuration of the d-
 - [ ] Sync Service: Verify state file updates on sync cycles
 - [ ] Headscale: Verify OIDC configuration is loaded
 - [ ] Headscale: Verify API key authentication
-- [ ] Integration: End-to-end OIDC login flow (deferred to integration test phase)
+- [x] Integration: End-to-end node registration and peer provisioning (CLI-based)
+- [ ] Integration: End-to-end OIDC login flow with browser automation
+- [ ] Integration: Actual VPN connectivity test (ping through tunnel)
+- [ ] Integration: Multi-node peer-to-peer connectivity test
+
+## Integration Test
+Validates the complete hybrid architecture flow from Headscale node registration through WireGuard peer provisioning and config delivery.
+
+- Setup: clean start via `docker compose down -v`, `docker compose up -d`, and health checks for headscale, keycloak, wireguard, and sync-service.
+- Execution: create integration user/node, generate preauth key, wait for sync service polling to provision the peer, verify WireGuard state, and retrieve peer config from the sync API.
+- Cleanup: `docker compose down` after assertions complete; temporary resources (`integration-test-user`, `integration-test-node`) are created and removed with the stack.
+- Expected duration: 2-5 minutes depending on startup and sync polling intervals.
 
 ## Troubleshooting
 - Pester module not found → run `Install-Module -Name Pester -Force -AllowClobber`.
 - Services not running → start with `docker compose up -d`.
 - `HEADSCALE_API_KEY` missing → generate and add to `.env` per `SETUP.md`.
 - Tests failing → inspect service logs with `docker compose logs <service>` and re-run the affected test file.
+- Integration test timeout waiting for services → increase health check timeout or check service logs.
+- Sync service not detecting node → verify `HEADSCALE_API_KEY` is set, check sync service logs for polling errors, and ensure a 30s poll interval has elapsed.
+- WireGuard peer not created → check sync service logs for key generation errors, verify docker socket mount, and validate `wg0.conf` syntax.
+- Peer config validation fails → inspect config output, check template rendering in `wireguard_manager.py`, and verify all key files exist.
