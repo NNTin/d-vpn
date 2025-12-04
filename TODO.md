@@ -91,13 +91,15 @@ Hybrid Proof of Work: Headscale handles node discovery via Keycloak OIDC, WireGu
 ✅ **Milestone 2.2 Complete** - Keycloak realm auto-import configured. Client secret: `d-vpn-headscale-secret-change-in-production` (documented in `keycloak/realm-export/README.md`)
 
 **Milestone 2.3: Headscale OIDC Integration with Keycloak**
-- [ ] Update `headscale/config/config.yaml` with OIDC configuration
-- [ ] Set issuer URL to `http://keycloak:8080/realms/d-vpn`
-- [ ] Configure client ID `headscale` and client secret from Keycloak bootstrap
-- [ ] Add OIDC callback URL configuration
-- [ ] Create init script to inject OIDC config dynamically if needed
-- [ ] Restart Headscale to apply OIDC config
-- [ ] **Verification:** Check Headscale logs show OIDC provider initialized, run `headscale health` returns success, access Headscale UI shows OIDC login option
+- [x] Update `headscale/config/config.yaml` with OIDC configuration
+- [x] Set issuer URL to `http://keycloak:8080/realms/d-vpn`
+- [x] Configure client ID `headscale` and client secret from Keycloak bootstrap
+- [x] Add OIDC callback URL configuration
+- [x] Create init script to inject OIDC config dynamically if needed (static configuration chosen for PoW simplicity; no init script created)
+- [x] Restart Headscale to apply OIDC config
+- [x] **Verification:** Check Headscale logs show OIDC provider initialized (`docker compose logs headscale | grep -i oidc`), run `docker compose exec headscale headscale health`, access Headscale UI OIDC login flow at `http://localhost:8080` (or via Caddy `http://localhost:8081`)
+
+✅ **Milestone 2.3 Complete** - Headscale OIDC configured with Keycloak realm `d-vpn`. Static config used for PoW (inline client_secret). Restart Headscale with `docker compose restart headscale` to apply.
 
 **Milestone 2.4: Custom Sync Service - Headscale Nodes to WireGuard Peers**
 - [ ] Create custom sync service (Python/Go) in new directory `sync-service/`

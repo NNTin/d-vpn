@@ -105,3 +105,14 @@ derp:
   # List of externally available DERP maps encoded in JSON
   urls:
     - https://controlplane.tailscale.com/derpmap/default
+
+# OIDC provider configuration (PoW inline secret). For production, replace client_secret with
+# client_secret_path pointing to a file containing the secret to avoid embedding secrets in config.
+oidc:
+  issuer: http://keycloak:8080/realms/d-vpn
+  client_id: headscale
+  client_secret: d-vpn-headscale-secret-change-in-production
+  scope:
+    - openid
+    - profile
+    - email
