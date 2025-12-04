@@ -1,3 +1,4 @@
-http://localhost:8081 {
-    reverse_proxy headscale-ui:8080
+http://localhost:8080 {
+	reverse_proxy /web* http://headscale-ui:8080
+	reverse_proxy * http://headscale:8080
 }

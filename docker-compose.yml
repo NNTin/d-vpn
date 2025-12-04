@@ -13,9 +13,10 @@ services:
       - ./headscale/lib:/var/lib/headscale
       - ./headscale/run:/var/run/headscale
     command: serve
-    ports:
-      - "8080:8080"  # Headscale server API
-      - "9090:9090"  # Prometheus metrics
+    # ports:
+    #   - 27896:8080
+    #   - "8080:8080"  # Headscale server API
+    #   - "9090:9090"  # Prometheus metrics
     networks:
       - d-vpn-net
     restart: unless-stopped
@@ -28,7 +29,7 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile  # Mount your Caddyfile
     ports:
-      - "8081:8081"  # Bind Caddy to localhost:8081
+      - "8080:8080"  # Bind Caddy to localhost:8080
     depends_on:
       - headscale-ui
     networks:
@@ -38,10 +39,11 @@ services:
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
     container_name: headscale-ui
-    environment:
-      - HS_SERVER=http://headscale:8080
-    expose:
-      - "80"  # Expose port 80 inside the container
+    # environment:
+    #   - HS_SERVER=http://headscale:8080
+    # expose:
+    #   - 8443:8443
+    #   - 8080:8080
     networks:
       - d-vpn-net
     restart: unless-stopped
