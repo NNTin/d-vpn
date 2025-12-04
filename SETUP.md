@@ -1,89 +1,127 @@
-# Sequence Diagram: Setting up the system
+# d-vpn Hybrid Proof-of-Work Setup
+
+Local development guide for the hybrid architecture (Headscale for discovery, WireGuard for tunnels, sync service as the bridge). The stack auto-bootstraps on first start—no manual realm imports or WireGuard templating required.
+
+## Architecture Diagram
 
 ```mermaid
 sequenceDiagram
-    participant DiscordBot as Discord Bot Dashboard (VPS / Cloud)
-    participant Keycloak as Keycloak (VPS / Cloud)
-    participant Headscale as Headscale (VPS / Cloud)
-    participant HomePi as Raspberry Pi Home Node
+    participant User as User/Node
+    participant Keycloak as Keycloak (OIDC)
+    participant Headscale as Headscale
+    participant Sync as Sync Service
+    participant WG as WireGuard
+    participant LAN as LAN/Services
 
-    %% Step 1: Initialize Discord Bot Dashboard
-    DiscordBot->>DiscordBot: Deploy and configure bot  
-    DiscordBot->>Keycloak: Configure Keycloak authentication endpoint  
-    DiscordBot->>Headscale: Set up Headscale server configuration  
-
-    %% Step 2: Keycloak Setup
-    Keycloak->>Keycloak: Configure Keycloak to issue ephemeral tokens  
-    Keycloak-->>DiscordBot: Provide URL to initiate Keycloak authentication for users  
-
-    %% Step 3: Headscale Setup
-    Headscale->>Headscale: Initialize Headscale server  
-    Headscale->>Keycloak: Configure token validation against Keycloak  
-    Headscale->>HomePi: Register Raspberry Pi as a node for VPN access  
-    Headscale->>Headscale: Set up ephemeral key distribution system  
-    Headscale-->>HomePi: Send registration details and configuration to Raspberry Pi  
-
-    %% Step 4: Raspberry Pi Home Node Setup
-    HomePi->>HomePi: Install and configure WireGuard  
-    HomePi->>Headscale: Register with Headscale for VPN management  
-    HomePi->>Headscale: Configure validation of ephemeral tokens  
-    HomePi-->>Headscale: Confirm successful registration  
-
-    %% Step 5: Final Configuration & Ready for User Authentication
-    DiscordBot-->>Keycloak: Ready to issue tokens for verified users  
-    Headscale-->>HomePi: VPN configuration complete  
-    Keycloak-->>DiscordBot: Ready to authenticate users  
-    HomePi-->>HomePi: Ready to accept VPN connections and validate tokens
+    User->>Keycloak: Login via OIDC
+    Keycloak-->>Headscale: Issue token
+    User->>Headscale: Complete OIDC flow
+    Headscale-->>User: Register node, issue client config
+    Headscale-->>Sync: Emit node update
+    Sync->>Headscale: Fetch node + preauth data
+    Sync->>WG: Provision peer + keys
+    WG-->>Sync: Confirm peer created
+    Sync-->>Headscale: Report status (optional)
+    User->>WG: Connect with WireGuard config
+    WG-->>LAN: Route tunnel traffic
+    LAN-->>User: Respond over VPN
 ```
 
-# Headscale UI Setup
+## Prerequisites
 
-Follow these steps to let the Headscale UI talk to your Headscale instance without 401 errors.
+- Docker and Docker Compose
+- git
+- curl (for quick API tests)
 
-1) Make sure the stack is running: `docker compose up -d`
-2) Create an API key from the Headscale container (the debug line about `HEADSCALE_CLI_ADDRESS` is normal):
-   `docker exec headscale headscale apikeys create --expiration 720h`
-Copy the returned token (example: `InSTKih.gJpg4OPPYMOuI6NloJN-K3ILC8o6wgke`).
-3) Open the UI at `http://localhost:8081`
-4) In the UI settings, set:
-   - Headscale URL: `http://localhost:8080` (from your host). If configuring from another container on the same Docker network, use `http://headscale:8080`.
-   - API key: paste the token from step 2.
-5) Reload the page and retry; the UI stores `headscaleURL` and `headscaleAPIKey` in your browser’s localStorage. If you still see 401s, verify the URL is reachable and the key is valid/unexpired.
+> Note: This guide targets local development / PoW of Option C (hybrid Headscale + WireGuard with sync service).
 
-# Headscale CLI Bootstrap (no UI)
+## Quick Start
 
-1) Ensure the stack is running: `docker compose up -d`
-2) Create the initial admin user in Headscale (message about `HEADSCALE_CLI_ADDRESS` is normal):
-   `docker exec headscale headscale users create admin`
-3) Confirm the user exists and note the ID (should be `1`):
-   `docker exec headscale headscale users list`
-4) Generate a reusable preauth key for the admin user (ID 1) with a 30-day expiry:
-   `docker exec headscale headscale preauthkeys create --user 1 --reusable --expiration 720h`
-   The generated key (current run): `9d320d6e6fa361f08586ec81d931d3b430f6bb7899a74739`
-5) Use that preauth key to connect a client (example with Tailscale client on the host):
-   `tailscale up --login-server http://localhost:8080 --authkey 9d320d6e6fa361f08586ec81d931d3b430f6bb7899a74739`
-   From another container on the same Docker network, point `--login-server` to `http://headscale:8080` instead of localhost.
+```bash
+# 1) Clone
+git clone https://github.com/your-org/d-vpn.git
+cd d-vpn
 
-# WireGuard Home Node & Peer Distribution (no Tailscale client)
+# 2) Env + Headscale API key
+cp .env.example .env
+docker compose exec headscale headscale apikeys create --expiration 720h
+# add the returned key to HEADSCALE_API_KEY in .env
 
-Goal: run `docker compose up` with minimal manual steps. Headscale will distribute WireGuard keys + HomePi endpoint to authenticated users (per the sequence diagram).
+# 3) Boot everything
+docker compose up -d
+# all services self-configure on first start (Keycloak realm, OIDC client, WireGuard keys, sync wiring)
+```
 
-Current lightweight/manual flow (until automation is added):
-1) Start the stack: `docker compose up -d`
-2) Generate server keys once:
-   `docker exec wireguard-server sh -c 'umask 077; mkdir -p /config/server; wg genkey > /config/server/privatekey-server; wg pubkey < /config/server/privatekey-server > /config/server/publickey-server'`
-3) Use the existing template `wg-config/templates/server.conf` to populate `wg-config/wg_confs/wg0.conf` with your desired subnet and server IP (e.g., 10.13.13.0/24, server at 10.13.13.1). Keep PostUp/PostDown NAT rules as-is.
-4) Restart WireGuard: `docker compose restart wireguard`
-5) For a test peer, generate keys and add a single `[Peer]` entry (temporary approach):
-   - `docker exec wireguard-server sh -c 'PEER=peer1; umask 077; mkdir -p /config/$PEER; wg genkey > /config/$PEER/privatekey-$PEER; wg pubkey < /config/$PEER/privatekey-$PEER > /config/$PEER/publickey-$PEER; wg genpsk > /config/$PEER/presharedkey-$PEER'`
-   - Append to `wg-config/wg_confs/wg0.conf`:
-     ```
-     [Peer]
-     PublicKey = $(cat /config/peer1/publickey-peer1)
-     PresharedKey = $(cat /config/peer1/presharedkey-peer1)
-     AllowedIPs = 10.13.13.2/32
-     ```
-   - Create `peer1.conf` for the user with the generated keys and `Endpoint = <HOME_ENDPOINT>:51820`.
-   - Restart WireGuard again: `docker compose restart wireguard`
+## Service Verification
 
-This manual peer flow will be replaced by automation (Headscale/dashboard) so users receive a ready-to-use WireGuard config without shell steps.
+- **Keycloak**: `docker compose logs keycloak | grep "Imported realm d-vpn"`; visit `http://localhost:8180` (admin/admin) and confirm the `d-vpn` realm exists (see `keycloak/realm-export/README.md`).
+- **Headscale**: `docker compose exec headscale headscale health`; look for OIDC init logs; UI at `http://localhost:8081`.
+- **WireGuard**: `docker exec wireguard-server wg show`; ensure no `No valid tunnel config found` in logs and that `wg0` exists.
+- **Sync Service**: `docker compose logs sync-service` for successful Headscale connection; health at `curl http://localhost:5000/health`; confirm state file is created.
+
+## OIDC Authentication Flow
+
+```bash
+# create a Headscale user for testing
+docker exec headscale headscale users create testuser
+
+# optional: generate a preauth key instead of OIDC
+docker exec headscale headscale preauthkeys create --user testuser --reusable --expiration 720h
+```
+
+- OIDC path: open `http://localhost:8080`, click login, and follow the redirect to Keycloak.
+- Use the test user credentials from `keycloak/realm-export/README.md`: `testuser` / `testpass`.
+- After login, the node is registered in Headscale. Confirm via `docker exec headscale headscale nodes list` or in the UI at `http://localhost:8081`.
+
+## Retrieving WireGuard Peer Config
+
+- The sync service auto-creates a WireGuard peer when a node registers.
+- Watch creation logs: `docker compose logs sync-service`.
+- List peers: `curl http://localhost:5000/peers`.
+- Fetch config for a specific node (use the Headscale node ID):  
+  `curl http://localhost:5000/peer/<node_id>/config`
+- Save the output to a file and import into your WireGuard client. The config includes the server public key, endpoint `localhost:51820`, peer private key, and allowed IPs.
+
+## Testing VPN Connection
+
+1. Install a WireGuard client on your host or test device.
+2. Import the peer config from the sync service.
+3. Connect and verify the tunnel.
+4. Test reachability: `ping 10.13.13.1` (WireGuard server).
+5. Check server logs for handshakes: `docker compose logs wireguard-server`.
+
+## Troubleshooting
+
+- **Services not starting**: `docker compose logs <service>`; ensure required ports are free.
+- **Keycloak realm not imported**: `docker compose down -v && docker compose up -d` to rebuild volumes.
+- **Headscale OIDC errors**: Confirm Keycloak is healthy; verify issuer URL and client secret in `headscale/config/config.yaml`.
+- **WireGuard interface missing**: Inspect init script logs; ensure keys exist in `/config/server/`; check `wg0.conf` was generated.
+- **Sync service cannot reach Headscale**: Confirm `HEADSCALE_API_KEY` in `.env`; regenerate if needed; ensure Headscale API responds.
+- **Sync service cannot reload WireGuard**: Verify Docker socket mount and WireGuard container name; validate `wg0.conf` syntax.
+- **Peer config absent**: Ensure the node exists in Headscale and the sync poll interval elapsed; review sync logs and state file.
+- **VPN connection fails**: Validate peer config, check UDP 51820 availability, and confirm handshake logs on the server.
+
+## Service URLs & Credentials
+
+| Service | URL / Endpoint | Credentials |
+| --- | --- | --- |
+| Headscale API | `http://localhost:8080` | n/a |
+| Headscale UI | `http://localhost:8081` | API key from `.env` |
+| Keycloak Admin | `http://localhost:8180` | admin / admin |
+| Keycloak Test User | Keycloak login | testuser / testpass |
+| Sync Service API | `http://localhost:5000` | n/a |
+| WireGuard UDP | `localhost:51820` | use peer config |
+
+## Next Steps
+
+- See `TODO.md` Milestone 2.5 for end-to-end verification checklist.
+- Milestone 3 (Discord Dashboard) is deferred.
+- Advanced sync service settings: `sync-service/README.md`.
+- Keycloak realm details: `keycloak/realm-export/README.md`.
+
+## Architecture Notes
+
+- Headscale drives node lifecycle and discovery via OIDC.
+- WireGuard carries the actual VPN traffic.
+- Sync service watches Headscale and provisions WireGuard peers accordingly.
+- This is a custom hybrid path (not stock Headscale/Tailscale). See the "Architecture Notes" section in `TODO.md` for deeper context.
