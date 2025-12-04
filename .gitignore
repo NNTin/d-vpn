@@ -1,0 +1,3 @@
+headscale/lib/db.sqlite
+headscale/lib/db.sqlite-shm
+headscale/lib/db.sqlite-wal

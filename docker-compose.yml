@@ -9,8 +9,9 @@ services:
     image: headscale/headscale:latest
     container_name: headscale
     volumes:
-      - ./config:/etc/headscale  # Mount local config directory
-      - ./data:/var/lib/headscale  # Mount local data directory for persistence
+      - ./headscale/config:/etc/headscale
+      - ./headscale/lib:/var/lib/headscale
+      - ./headscale/run:/var/run/headscale
     command: serve
     ports:
       - "8080:8080"  # Headscale server API
@@ -18,6 +19,8 @@ services:
     networks:
       - d-vpn-net
     restart: unless-stopped
+    healthcheck:
+        test: ["CMD", "headscale", "health"]
 
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
