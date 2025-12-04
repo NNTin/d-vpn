@@ -2,6 +2,8 @@
 
 Local development guide for the hybrid architecture (Headscale for discovery, WireGuard for tunnels, sync service as the bridge). The stack auto-bootstraps on first start—no manual realm imports or WireGuard templating required.
 
+> **CI Status:** All tests run automatically on push/PR. Check the [GitHub Actions](https://github.com/nntin/d-vpn/actions) page for current build status.
+
 ## Architecture Diagram
 
 ```mermaid
@@ -112,8 +114,16 @@ docker exec headscale headscale preauthkeys create --user testuser --reusable --
 | Sync Service API | `http://localhost:5000` | n/a |
 | WireGuard UDP | `localhost:51820` | use peer config |
 
+## Testing
+
+- Running Tests Locally: `pwsh ./tests/Run-AllTests.ps1` to execute the complete suite (individual + integration tests).
+- Individual Tests: `pwsh ./tests/Run-IndividualTests.ps1` to run service tests without integration coverage.
+- CI Automation: All tests run automatically in CI on every commit.
+- Test Documentation: See `tests/README.md` for detailed test information and troubleshooting.
+
 ## Next Steps
 
+- Run tests to verify setup: `pwsh ./tests/Run-AllTests.ps1`
 - See `TODO.md` Milestone 2.5 for end-to-end verification checklist.
 - Milestone 3 (Discord Dashboard) is deferred.
 - Advanced sync service settings: `sync-service/README.md`.

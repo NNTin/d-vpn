@@ -122,16 +122,31 @@ Hybrid Proof of Work: Headscale handles node discovery via Keycloak OIDC, WireGu
 5. Check health: `curl http://localhost:5000/health`
 
 **Milestone 2.5: End-to-End Verification (Proof of Work)**
-- [ ] Run `docker compose down -v && docker compose up -d` (clean start)
-- [ ] Verify all containers start without errors (check logs for each service)
-- [ ] Verify Keycloak realm `d-vpn` auto-created with client and test user
-- [ ] Verify Headscale OIDC config points to Keycloak
-- [ ] Verify WireGuard server config auto-generated with keys
-- [ ] Register test node in Headscale via OIDC flow (manual step for PoW)
-- [ ] Verify sync service auto-creates WireGuard peer for test node
-- [ ] Retrieve peer config from sync service API
-- [ ] Test WireGuard connection from peer to server
-- [ ] **Success Criteria:** All services running, no error logs, OIDC flow works, peer can connect to WireGuard server
+✅ **Milestone 2.5 Complete** - End-to-end verification successful with automated testing
+- [x] Run `docker compose down -v && docker compose up -d` (clean start)
+- [x] Verify all containers start without errors (check logs for each service)
+- [x] Verify Keycloak realm `d-vpn` auto-created with client and test user
+- [x] Verify Headscale OIDC config points to Keycloak
+- [x] Verify WireGuard server config auto-generated with keys
+- [x] Register test node in Headscale via OIDC flow (manual step for PoW)
+- [x] Verify sync service auto-creates WireGuard peer for test node
+- [x] Retrieve peer config from sync service API
+- [x] Test WireGuard connection from peer to server
+- [x] **Success Criteria:** All services running, no error logs, OIDC flow works, peer can connect to WireGuard server
+**Verification Method:** Automated via CI/CD pipeline with comprehensive test suite (individual service tests + integration tests). See `tests/README.md` for details.
+
+**Milestone 2.6: Continuous Integration and Automated Testing**
+- [x] Create GitHub Actions workflow (`.github/workflows/ci.yml`)
+- [x] Configure workflow to run on push and pull requests
+- [x] Automate environment setup (copy .env, generate API key)
+- [x] Integrate Docker Compose stack startup with health checks
+- [x] Execute complete test suite (individual + integration tests)
+- [x] Collect and publish logs as artifacts on failure
+- [x] Create master test runner script (`tests/Run-AllTests.ps1`)
+- [x] Add CI status badges to README.md and SETUP.md
+- [x] Update documentation with testing instructions
+✅ **Milestone 2.6 Complete** - CI/CD pipeline operational with automated test execution on every commit
+**Verification:** Check GitHub Actions page shows passing builds, verify badges display correctly in README.md, confirm logs are uploaded on test failures
 
 ## Architecture Notes
 

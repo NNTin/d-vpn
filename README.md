@@ -1,4 +1,5 @@
 # D-VPN
+[![CI](https://github.com/nntin/d-vpn/actions/workflows/ci.yml/badge.svg)](https://github.com/nntin/d-vpn/actions/workflows/ci.yml)
 
 **D-VPN** is a cloud-first, zero-trust VPN solution that allows secure access to a hidden home network. It leverages:
 
@@ -18,6 +19,7 @@ This repository contains setup instructions and configurations for the Discord b
 - [Features](#features)  
 - [Prerequisites](#prerequisites)
 - [Local Development Setup](#local-development-setup)
+- [Testing](#testing)
 - [Setup Instructions](#setup-instructions)  
   - [Discord Bot & Dashboard](#discord-bot--dashboard)  
   - [Keycloak Server](#keycloak-server)  
@@ -83,6 +85,12 @@ This project includes a Docker Compose setup for a complete local development en
         *   **Username:** `admin`
         *   **Password:** `admin`
     *   **WireGuard:** port `51820/udp`
+
+---
+
+## Testing
+
+This project includes automated tests for all services and end-to-end integration testing. See `tests/README.md` for detailed testing instructions. All tests run automatically on every push and pull request via GitHub Actions. To run tests locally: `pwsh ./tests/Run-AllTests.ps1`
 
 ---
 

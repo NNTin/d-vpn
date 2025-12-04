@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare environment file
+        run: cp .env.example .env
+
+      - name: Generate Headscale API key
+        run: |
+          docker compose up -d headscale
+          echo "Waiting for headscale to be ready..."
+          for i in {1..30}; do
+            docker compose exec -T headscale headscale health >/dev/null 2>&1 && break
+            sleep 2
+          done
+          KEY=$(docker compose exec -T headscale headscale apikeys create --expiration 720h | awk '{print $NF}' | tail -n 1)
+          if [ -z "$KEY" ]; then
+            echo "Failed to generate Headscale API key"
+            exit 1
+          fi
+          echo "HEADSCALE_API_KEY=$KEY" >> .env
+          docker compose stop headscale
+
+      - name: Start services
+        run: docker compose up -d --wait
+
+      - name: Install Pester
+        shell: pwsh
+        run: Install-Module -Name Pester -Force -AllowClobber -Scope CurrentUser
+
+      - name: Run full test suite
+        shell: pwsh
+        run: ./tests/Run-AllTests.ps1
+
+      - name: Collect docker compose logs
+        if: failure()
+        run: docker compose logs > ci-logs.txt
+
+      - name: Upload logs artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: ci-logs.txt
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v

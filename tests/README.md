@@ -3,17 +3,22 @@
 ## Overview
 This Pester-based suite verifies automated bootstrap and configuration of the d-vpn stack. It validates Keycloak realm/client/user imports, WireGuard tunnel activation, and sync service readiness using both log inspection and runtime checks executed via `docker compose exec`.
 
+## CI/CD Integration
+All tests run automatically via GitHub Actions on every push and pull request. The CI workflow (`.github/workflows/ci.yml`) performs a clean environment setup, generates required secrets, starts the Docker Compose stack, and executes the complete test suite. On test failures, Docker Compose logs are automatically collected and published as workflow artifacts for debugging. Check the [GitHub Actions](https://github.com/nntin/d-vpn/actions) page for current build status and test results.
+
 ## Prerequisites
 - PowerShell 7+ available in your PATH.
 - Pester module installed: `Install-Module -Name Pester -Force -AllowClobber`.
+- CI environment: GitHub Actions runners have all prerequisites pre-installed (PowerShell 7+, Pester, Docker Compose).
 - Docker Compose v2 installed and accessible as `docker compose`.
 - Stack running locally: `docker compose up -d` (start headscale, keycloak, wireguard, sync-service).
 - `.env` file with `HEADSCALE_API_KEY` set for sync service tests (generate via `docker exec headscale headscale apikeys create -e 999d` as noted in `SETUP.md`).
 
 ## Usage
 ### Running all tests
-- `pwsh ./tests/Run-IndividualTests.ps1`
-- The script checks prerequisites, runs each test file, prints per-file pass/fail/skip counts, and exits non-zero if any test fails.
+- `pwsh ./tests/Run-AllTests.ps1`
+- This runs both individual service tests and the integration test (same as CI).
+- For individual tests only (without integration): `pwsh ./tests/Run-IndividualTests.ps1`
 
 ### Running individual tests
 - Keycloak: `pwsh ./tests/KeycloakStartup.Tests.ps1`
