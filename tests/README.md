@@ -1,24 +1,52 @@
-```pwsh
-PS /home/nntin/git/d-vpn> Install-Module -Name PowerShellGet -Force -SkipPublisherCheck
-PS /home/nntin/git/d-vpn> Install-Module -Name Pester -Force -AllowClobber
-PS /home/nntin/git/d-vpn> Get-Module -Name Pester -ListAvailable
+# Test Suite
 
-PS /home/nntin/git/d-vpn> pwsh ./tests/WireGuardStartup.Tests.ps1                      
+## Overview
+This Pester-based suite verifies automated bootstrap and configuration of the d-vpn stack. It validates Keycloak realm/client/user imports, WireGuard tunnel activation, and sync service readiness using both log inspection and runtime checks executed via `docker compose exec`.
 
-Starting discovery in 1 files.
-Discovery found 1 tests in 189ms.
-Running tests.
-[+] /home/nntin/git/d-vpn/tests/WireGuardStartup.Tests.ps1 615ms (214ms|238ms)
-Tests completed in 630ms
-Tests Passed: 1, Failed: 0, Skipped: 0, Inconclusive: 0, NotRun: 0
-```
+## Prerequisites
+- PowerShell 7+ available in your PATH.
+- Pester module installed: `Install-Module -Name Pester -Force -AllowClobber`.
+- Docker Compose v2 installed and accessible as `docker compose`.
+- Stack running locally: `docker compose up -d` (start headscale, keycloak, wireguard, sync-service).
+- `.env` file with `HEADSCALE_API_KEY` set for sync service tests (generate via `docker exec headscale headscale apikeys create -e 999d` as noted in `SETUP.md`).
 
-## Sync service test setup
+## Usage
+### Running all tests
+- `pwsh ./tests/Run-IndividualTests.ps1`
+- The script checks prerequisites, runs each test file, prints per-file pass/fail/skip counts, and exits non-zero if any test fails.
 
-Requirements: Docker Compose v2, Pester, and a Headscale API key.
+### Running individual tests
+- Keycloak: `pwsh ./tests/KeycloakStartup.Tests.ps1`
+- WireGuard: `pwsh ./tests/WireGuardStartup.Tests.ps1`
+- Sync service: `pwsh ./tests/SyncService.Tests.ps1`
 
-1) Create `.env` in repo root with `HEADSCALE_API_KEY` (generate with `docker exec headscale headscale apikeys create -e 999d`).
-2) Start the stack so `sync-service` is running: `docker compose up -d --build headscale wireguard sync-service`.
-3) Run tests: `pwsh ./tests/SyncService.Tests.ps1`.
+### Interpreting results
+- Pester output reports Passed/Failed/Skipped counts and durations. A non-zero exit code from the runner or individual files indicates at least one failure; investigate detailed test output to identify which checks failed.
 
-The sync service tests check the container is running, `/health` returns `{"status":"healthy"}`, and `/peers` responds with JSON. A populated peer list is optional; an empty array passes.
+## Verification Criteria
+| Service   | Verification Type | Criteria |
+|-----------|-------------------|----------|
+| Keycloak  | Log inspection    | Realm import triggers and finishes; dev mode starts |
+| Keycloak  | Config verification | `d-vpn` realm exists; `headscale` client present with expected redirect URIs; `testuser` user exists |
+| WireGuard | Log inspection    | Tunnel config discovered and activation logged |
+| WireGuard | Runtime state     | `wg0` interface active with port 51820; server keys present; `wg0.conf` populated with interface, address, listen port, private key |
+| Sync Service | Container status | Container present and running |
+| Sync Service | API health     | `/health` returns healthy; `/peers` responds with JSON |
+| Sync Service | Internal state | State file exists and is valid JSON; critical env vars present; container can reach Headscale health endpoint |
+
+## Future Enhancements
+- [ ] Keycloak: Verify OIDC token generation for testuser
+- [ ] Keycloak: Verify client secret matches Headscale config
+- [ ] WireGuard: Verify firewall rules (iptables/nftables)
+- [ ] WireGuard: Verify DNS resolution via CoreDNS
+- [ ] Sync Service: Verify WireGuard peer creation after Headscale node registration
+- [ ] Sync Service: Verify state file updates on sync cycles
+- [ ] Headscale: Verify OIDC configuration is loaded
+- [ ] Headscale: Verify API key authentication
+- [ ] Integration: End-to-end OIDC login flow (deferred to integration test phase)
+
+## Troubleshooting
+- Pester module not found → run `Install-Module -Name Pester -Force -AllowClobber`.
+- Services not running → start with `docker compose up -d`.
+- `HEADSCALE_API_KEY` missing → generate and add to `.env` per `SETUP.md`.
+- Tests failing → inspect service logs with `docker compose logs <service>` and re-run the affected test file.
