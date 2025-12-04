@@ -53,7 +53,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       # Default admin credentials for local development.
       - KEYCLOAK_ADMIN=admin
@@ -61,10 +61,21 @@ services:
     ports:
       - "8180:8080"  # Keycloak admin console
     volumes:
+      - ./keycloak/realm-export:/opt/keycloak/data/import:ro  # Realm import for bootstrap
       - keycloak-data:/opt/keycloak/data  # Persistent data for Keycloak
     networks:
       - d-vpn-net
     restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   wireguard:
     image: linuxserver/wireguard:latest

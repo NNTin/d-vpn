@@ -79,14 +79,16 @@ Hybrid Proof of Work: Headscale handles node discovery via Keycloak OIDC, WireGu
 - [x] **Verification:** Run `docker compose up`, check WireGuard logs show no "No valid tunnel config found" error, verify `wg show` displays interface
 
 **Milestone 2.2: Keycloak Realm, Client, and Test User Bootstrap**
-- [ ] Create Keycloak bootstrap script/container that runs on startup
-- [ ] Auto-create realm `d-vpn` if not exists
-- [ ] Create OIDC client `headscale` with redirect URIs `http://localhost:8080/oidc/callback`
-- [ ] Create test user `testuser` with password `testpass`
-- [ ] Export client secret for Headscale configuration
-- [ ] Use Keycloak Admin REST API or import JSON realm config
-- [ ] Add init container or startup script to `docker-compose.yml`
-- [ ] **Verification:** Access Keycloak admin console, verify realm `d-vpn` exists, client `headscale` configured, test user can login
+- [x] Create Keycloak bootstrap script/container that runs on startup
+- [x] Auto-create realm `d-vpn` if not exists
+- [x] Create OIDC client `headscale` with redirect URIs `http://localhost:8080/oidc/callback`
+- [x] Create test user `testuser` with password `testpass`
+- [x] Export client secret for Headscale configuration
+- [x] Use Keycloak Admin REST API or import JSON realm config
+- [x] Add init container or startup script to `docker-compose.yml`
+- [x] **Verification:** Access Keycloak admin console, verify realm `d-vpn` exists, client `headscale` configured, test user can login
+
+✅ **Milestone 2.2 Complete** - Keycloak realm auto-import configured. Client secret: `d-vpn-headscale-secret-change-in-production` (documented in `keycloak/realm-export/README.md`)
 
 **Milestone 2.3: Headscale OIDC Integration with Keycloak**
 - [ ] Update `headscale/config/config.yaml` with OIDC configuration
