@@ -12,3 +12,13 @@ Running tests.
 Tests completed in 630ms
 Tests Passed: 1, Failed: 0, Skipped: 0, Inconclusive: 0, NotRun: 0
 ```
+
+## Sync service test setup
+
+Requirements: Docker Compose v2, Pester, and a Headscale API key.
+
+1) Create `.env` in repo root with `HEADSCALE_API_KEY` (generate with `docker exec headscale headscale apikeys create -e 999d`).
+2) Start the stack so `sync-service` is running: `docker compose up -d --build headscale wireguard sync-service`.
+3) Run tests: `pwsh ./tests/SyncService.Tests.ps1`.
+
+The sync service tests check the container is running, `/health` returns `{"status":"healthy"}`, and `/peers` responds with JSON. A populated peer list is optional; an empty array passes.
