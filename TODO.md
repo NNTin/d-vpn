@@ -24,11 +24,11 @@ This document outlines the steps to set up a local development environment for D
 - [ ] **Configure Headscale Admin:**
     - [x] Access the Headscale container.
     - [x] Create an initial admin user/namespace.
-- [ ] **Configure WireGuard "Home Node":**
-    - [x] Generate a pre-auth key in Headscale for the new user.
-    - [ ] On your local machine (or a dedicated container), install WireGuard.
-    - [ ] Use the pre-auth key to connect the WireGuard client to the Headscale container.
-    - [ ] Verify the node appears in Headscale's admin UI.
+- [ ] **Configure WireGuard Home Node & Client Flow (no Tailscale client):**
+    - [x] Generate a pre-auth key in Headscale for the admin user (for future device bootstrap).
+    - [ ] Prepare the WireGuard home node (e.g., Raspberry Pi or the `wireguard` service) to serve as the endpoint distributed by Headscale.
+    - [ ] Define how Headscale (via API / dashboard) hands out WireGuard peer configs (keys + HomePi endpoint) to authenticated users.
+    - [ ] Verify a test peer can connect to the home node using the distributed WireGuard config.
 - [ ] **Configure Keycloak Admin:**
     - [ ] Log in to the Keycloak admin console.
     - [ ] Create a new realm (e.g., `d-vpn`).

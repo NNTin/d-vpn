@@ -25,3 +25,12 @@ Copy the returned token (example: `InSTKih.gJpg4OPPYMOuI6NloJN-K3ILC8o6wgke`).
 5) Use that preauth key to connect a client (example with Tailscale client on the host):
    `tailscale up --login-server http://localhost:8080 --authkey 9d320d6e6fa361f08586ec81d931d3b430f6bb7899a74739`
    From another container on the same Docker network, point `--login-server` to `http://headscale:8080` instead of localhost.
+
+# WireGuard Home Node & Peer Distribution (no Tailscale client)
+
+The sequence diagram uses Headscale to distribute WireGuard keys and the HomePi endpoint to authenticated users. We do not rely on the Tailscale client in this flow.
+
+Planned steps (aligning with TODO):
+1) Prepare the WireGuard home node (Raspberry Pi or the `wireguard` container) as the endpoint Headscale will advertise.
+2) Define how Headscale (via API / dashboard) hands out WireGuard peer configs (keys + HomePi endpoint) to authenticated users.
+3) Verify a test peer can connect to the home node using the distributed WireGuard config.
