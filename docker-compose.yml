@@ -76,9 +76,11 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
+      - INTERFACE=10.13.13
     volumes:
       - ./wg-config:/config  # Mount local config for WireGuard
       - /lib/modules:/lib/modules # Required for kernel modules
+      - ./wg-config/custom-cont-init.d:/custom-cont-init.d # Custom init scripts
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
     ports:
@@ -90,7 +92,7 @@ services:
       test: ["CMD", "sh", "-c", "test -f /config/wg_confs/wg0.conf && wg show all || exit 1"]
       interval: 30s                 # Check every 30 seconds
       retries: 3                    # Retry 3 times before considering unhealthy
-      start_period: 5s              # Wait 5 seconds before starting checks
+      start_period: 10s             # Wait 10 seconds before starting checks
       timeout: 2s                   # Timeout after 2 seconds
 
 networks:

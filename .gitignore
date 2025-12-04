@@ -2,3 +2,6 @@ headscale/lib/db.sqlite
 headscale/lib/db.sqlite-shm
 headscale/lib/db.sqlite-wal
 headscale/lib/noise_private.key
+wg-config/server/publickey-server
+wg-config/wg_confs/wg0.conf
+wg-config/server/privatekey-server
