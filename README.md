@@ -16,7 +16,8 @@ This repository contains setup instructions and configurations for the Discord b
 
 - [Architecture](#architecture)  
 - [Features](#features)  
-- [Prerequisites](#prerequisites)  
+- [Prerequisites](#prerequisites)
+- [Local Development Setup](#local-development-setup)
 - [Setup Instructions](#setup-instructions)  
   - [Discord Bot & Dashboard](#discord-bot--dashboard)  
   - [Keycloak Server](#keycloak-server)  
@@ -56,6 +57,32 @@ User Device -> Discord Bot Dashboard (Cloud/VPS) -> Discord OAuth2 -> Keycloak (
 - Discord bot (e.g., [d-cogs](https://github.com/nntin/d-cogs))  
 - Raspberry Pi with WireGuard installed at home  
 - Basic knowledge of Docker or Linux services  
+
+---
+
+## Local Development Setup
+
+This project includes a Docker Compose setup for a complete local development environment.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/nntin/d-vpn.git
+    cd d-vpn
+    ```
+
+2.  **Start the services:**
+    ```bash
+    docker-compose up -d
+    ```
+
+    This will start the following services:
+    *   **Headscale:** `http://localhost:8080`
+    *   **Headscale UI:** `http://localhost:8081`
+    *   **Keycloak:** `http://localhost:8180`
+        *   **Admin Console:** `http://localhost:8180`
+        *   **Username:** `admin`
+        *   **Password:** `admin`
+    *   **WireGuard:** port `51820/udp`
 
 ---
 

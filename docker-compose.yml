@@ -1,0 +1,78 @@
+version: '3.8'
+
+# This Docker Compose file sets up the local development environment for D-VPN.
+# It includes Headscale for VPN coordination, Keycloak for authentication,
+# a WireGuard server to act as the home node, and a UI for Headscale.
+
+services:
+  headscale:
+    image: headscale/headscale:latest
+    container_name: headscale
+    volumes:
+      - ./config:/etc/headscale  # Mount local config directory
+      - ./data:/var/lib/headscale  # Mount local data directory for persistence
+    command: serve
+    ports:
+      - "8080:8080"  # Headscale server API
+      - "9090:9090"  # Prometheus metrics
+    networks:
+      - d-vpn-net
+    restart: unless-stopped
+
+  headscale-ui:
+    image: ghcr.io/gurucomputing/headscale-ui:latest
+    container_name: headscale-ui
+    environment:
+      # Connects the UI to the headscale service over the internal docker network.
+      - HS_SERVER=http://headscale:8080
+    ports:
+      - "8081:80"  # Web UI for Headscale
+    depends_on:
+      - headscale
+    networks:
+      - d-vpn-net
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command: start-dev
+    environment:
+      # Default admin credentials for local development.
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "8180:8080"  # Keycloak admin console
+    volumes:
+      - keycloak-data:/opt/keycloak/data  # Persistent data for Keycloak
+    networks:
+      - d-vpn-net
+    restart: unless-stopped
+
+  wireguard:
+    image: linuxserver/wireguard:latest
+    container_name: wireguard-server
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ./wg-config:/config  # Mount local config for WireGuard
+      - /lib/modules:/lib/modules # Required for kernel modules
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    ports:
+      - "51820:51820/udp"  # Standard WireGuard port
+    networks:
+      - d-vpn-net
+    restart: unless-stopped
+
+networks:
+  d-vpn-net:
+    driver: bridge
+
+volumes:
+  keycloak-data:

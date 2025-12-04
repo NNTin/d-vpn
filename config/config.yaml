@@ -1,0 +1,31 @@
+# The URL clients will use to connect to Headscale.
+# For local development, this is the host machine's localhost.
+server_url: http://localhost:8080
+
+# The address Headscale will listen on inside the container.
+listen_addr: 0.0.0.0:8080
+metrics_listen_addr: 0.0.0.0:9090
+
+# gRPC configuration for CLI and other integrations.
+grpc_listen_addr: 0.0.0.0:50443
+grpc_allow_insecure: true
+
+# Database configuration. We use SQLite for simplicity in local dev.
+db_type: sqlite3
+db_path: /var/lib/headscale/db.sqlite
+
+# IP prefixes for the VPN. THIS IS REQUIRED.
+ip_prefixes:
+  - 100.64.0.0/10
+
+# Noise (Tailscale v2 protocol) configuration
+noise:
+  private_key_path: /var/lib/headscale/noise.private.key
+
+# DNS configuration.
+dns:
+  override_local_dns: false
+
+# Logging configuration
+log:
+  level: debug

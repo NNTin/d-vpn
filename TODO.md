@@ -4,20 +4,20 @@ This document outlines the steps to set up a local development environment for D
 
 ## Milestone 1: Local Environment Setup with Docker Compose
 
-- [ ] **Create `docker-compose.yml`:**
-    - [ ] Define a service for **Headscale**.
-    - [ ] Define a service for **Keycloak**.
-    - [ ] Define a service for a **WireGuard Server** (acting as the home node for local dev).
-    - [ ] Add a service for a web UI for Headscale (e.g., `headscale-ui`) for easier development.
-    - [ ] Configure a shared Docker network for inter-service communication.
-    - [ ] **Note:** Ensure the WireGuard server is configured to allow connections from the Headscale network, and can route traffic to other services if needed.
-- [ ] **Initial Configuration Files:**
-    - [ ] Create a basic `headscale/config.yaml` to be mounted into the container.
-    - [ ] Create directories for persistent data for Keycloak and Headscale.
-    - [ ] Create necessary configuration for the WireGuard server (e.g., `wg0.conf`).
-- [ ] **Launch Environment:**
-    - [ ] Run `docker-compose up -d` and ensure all containers start correctly.
-    - [ ] Document the default URLs and admin credentials for Keycloak and Headscale.
+- [x] **Create `docker-compose.yml`:**
+    - [x] Define a service for **Headscale**.
+    - [x] Define a service for **Keycloak**.
+    - [x] Define a service for a **WireGuard Server** (acting as the home node for local dev).
+    - [x] Add a service for a web UI for Headscale (e.g., `headscale-ui`) for easier development.
+    - [x] Configure a shared Docker network for inter-service communication.
+    - [x] **Note:** Ensure the WireGuard server is configured to allow connections from the Headscale network, and can route traffic to other services if needed.
+- [x] **Initial Configuration Files:**
+    - [x] Create a basic `headscale/config.yaml` to be mounted into the container.
+    - [x] Create directories for persistent data for Keycloak and Headscale.
+    - [x] Create necessary configuration for the WireGuard server (e.g., `wg0.conf`).
+- [x] **Launch Environment:**
+    - [x] Run `docker-compose up -d` and ensure all containers start correctly.
+    - [x] Document the default URLs and admin credentials for Keycloak and Headscale.
 
 ## Milestone 2: Core Services Configuration & Integration
 
