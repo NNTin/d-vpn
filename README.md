@@ -76,8 +76,8 @@ This project includes a Docker Compose setup for a complete local development en
     ```
 
     This will start the following services:
-    *   **Headscale:** `http://localhost:8080`
-    *   **Headscale UI:** `http://localhost:8081`
+    *   **Headscale:** `http://localhost:8081`
+    *   **Headscale UI:** `http://localhost:8081/web`
     *   **Keycloak:** `http://localhost:8180`
         *   **Admin Console:** `http://localhost:8180`
         *   **Username:** `admin`

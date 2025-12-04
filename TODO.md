@@ -22,7 +22,7 @@ This document outlines the steps to set up a local development environment for D
 ## Milestone 2: Core Services Configuration & Integration
 
 - [ ] **Configure Headscale Admin:**
-    - [ ] Access the Headscale container or UI.
+    - [ ] Access the Headscale container.
     - [ ] Create an initial admin user/namespace.
 - [ ] **Configure WireGuard "Home Node":**
     - [ ] Generate a pre-auth key in Headscale for the new user.
