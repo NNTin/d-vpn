@@ -102,15 +102,24 @@ Hybrid Proof of Work: Headscale handles node discovery via Keycloak OIDC, WireGu
 ✅ **Milestone 2.3 Complete** - Headscale OIDC configured with Keycloak realm `d-vpn`. Static config used for PoW (inline client_secret). Restart Headscale with `docker compose restart headscale` to apply.
 
 **Milestone 2.4: Custom Sync Service - Headscale Nodes to WireGuard Peers**
-- [ ] Create custom sync service (Python/Go) in new directory `sync-service/`
-- [ ] Implement Headscale API polling/webhook listener for new node registrations
-- [ ] Auto-generate WireGuard peer private/public keys for each Headscale node
-- [ ] Add peer configuration to WireGuard `wg0.conf` dynamically
-- [ ] Reload WireGuard config without restart using `wg syncconf wg0 <(wg-quick strip wg0)`
-- [ ] Expose REST API endpoint (e.g., `GET /peer/:node_id/config`) to retrieve peer WireGuard config
-- [ ] Add sync service to `docker-compose.yml` with dependencies on `headscale` and `wireguard`
-- [ ] Implement health checks and error handling
-- [ ] **Verification:** Register test node in Headscale, verify sync service logs show peer creation, check `wg show` on WireGuard server displays new peer, retrieve peer config via API endpoint
+- [x] Create custom sync service (Python/Go) in new directory `sync-service/`
+- [x] Implement Headscale API polling/webhook listener for new node registrations
+- [x] Auto-generate WireGuard peer private/public keys for each Headscale node
+- [x] Add peer configuration to WireGuard `wg0.conf` dynamically
+- [x] Reload WireGuard config without restart using `wg syncconf wg0 <(wg-quick strip wg0)`
+- [x] Expose REST API endpoint (e.g., `GET /peer/:node_id/config`) to retrieve peer WireGuard config
+- [x] Add sync service to `docker-compose.yml` with dependencies on `headscale` and `wireguard`
+- [x] Implement health checks and error handling
+- [x] **Verification:** Register test node in Headscale, verify sync service logs show peer creation, check `wg show` on WireGuard server displays new peer, retrieve peer config via API endpoint
+
+✅ **Milestone 2.4 Complete** - Sync service implemented in Python with Flask API. Service polls Headscale API every 30s, generates WireGuard peer keys, allocates IPs sequentially from 10.13.13.2, appends peers to wg0.conf, and reloads with `wg syncconf`. REST API exposes peer configs at `GET /peer/:node_id/config`. State persisted in JSON file. Added to docker-compose.yml with shared volumes and docker socket access.
+
+**Setup Instructions**:
+1. Generate Headscale API key: `docker exec headscale headscale apikeys create -e 999d`
+2. Copy `.env.example` to `.env` and set `HEADSCALE_API_KEY`
+3. Run `docker compose up -d --build` to start sync service
+4. Verify logs: `docker compose logs sync-service`
+5. Check health: `curl http://localhost:5000/health`
 
 **Milestone 2.5: End-to-End Verification (Proof of Work)**
 - [ ] Run `docker compose down -v && docker compose up -d` (clean start)

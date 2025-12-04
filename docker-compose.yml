@@ -106,6 +106,41 @@ services:
       start_period: 10s             # Wait 10 seconds before starting checks
       timeout: 2s                   # Timeout after 2 seconds
 
+  sync-service:
+    build:
+      context: ./sync-service
+      dockerfile: Dockerfile
+    container_name: sync-service
+    environment:
+      - HEADSCALE_URL=http://headscale:8080
+      - HEADSCALE_API_KEY=${HEADSCALE_API_KEY}
+      - WIREGUARD_CONTAINER_NAME=wireguard-server
+      - WIREGUARD_CONFIG_PATH=/config
+      - WIREGUARD_INTERFACE=wg0
+      - WIREGUARD_SUBNET=10.13.13.0/24
+      - WIREGUARD_SERVER_IP=10.13.13.1
+      - WIREGUARD_PEER_START_IP=10.13.13.2
+      - POLL_INTERVAL=30
+      - STATE_FILE_PATH=/config/sync-service-state.json
+      - API_PORT=5000
+    volumes:
+      - ./wg-config:/config
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "5000:5000"
+    depends_on:
+      - headscale
+      - wireguard
+    networks:
+      - d-vpn-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
 networks:
   d-vpn-net:
     driver: bridge

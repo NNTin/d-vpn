@@ -5,3 +5,11 @@ headscale/lib/noise_private.key
 wg-config/server/publickey-server
 wg-config/wg_confs/wg0.conf
 wg-config/server/privatekey-server
+.env
+sync-service-state.json
+wg-config/sync-service-state.json
+wg-config/peers/
+!wg-config/peers/.gitkeep
+__pycache__/
+*.pyc
+.pytest_cache/
