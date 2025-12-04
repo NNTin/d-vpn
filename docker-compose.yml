@@ -22,16 +22,26 @@ services:
     healthcheck:
         test: ["CMD", "headscale", "health"]
 
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile  # Mount your Caddyfile
+    ports:
+      - "8081:8081"  # Bind Caddy to localhost:8081
+    depends_on:
+      - headscale-ui
+    networks:
+      - d-vpn-net
+    restart: unless-stopped
+
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
     container_name: headscale-ui
     environment:
-      # Connects the UI to the headscale service over the internal docker network.
       - HS_SERVER=http://headscale:8080
-    ports:
-      - "8081:80"  # Web UI for Headscale
-    depends_on:
-      - headscale
+    expose:
+      - "80"  # Expose port 80 inside the container
     networks:
       - d-vpn-net
     restart: unless-stopped
