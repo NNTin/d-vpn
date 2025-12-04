@@ -86,6 +86,12 @@ services:
     networks:
       - d-vpn-net
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "test -f /config/wg_confs/wg0.conf && wg show all || exit 1"]
+      interval: 30s                 # Check every 30 seconds
+      retries: 3                    # Retry 3 times before considering unhealthy
+      start_period: 5s              # Wait 5 seconds before starting checks
+      timeout: 2s                   # Timeout after 2 seconds
 
 networks:
   d-vpn-net:

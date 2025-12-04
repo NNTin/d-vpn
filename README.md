@@ -119,7 +119,7 @@ This project includes a Docker Compose setup for a complete local development en
 
 ---
 
-## Sequence Diagram
+## Sequence Diagram: User device connecting to unknown WireGuard server
 
 ```mermaid
 sequenceDiagram
