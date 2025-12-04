@@ -70,13 +70,13 @@ Hybrid Proof of Work: Headscale handles node discovery via Keycloak OIDC, WireGu
 ## Milestone 2: Hybrid Core Services Auto-Bootstrap (Headscale + Sync Service + WireGuard)
 
 **Milestone 2.1: WireGuard Server Auto-Configuration**
-- [ ] Create initialization script for WireGuard container
-- [ ] Auto-generate server private/public keys if not present in `/config/server/`
-- [ ] Auto-populate `wg-config/wg_confs/wg0.conf` from `wg-config/templates/server.conf` template
-- [ ] Use subnet `10.13.13.0/24` with server IP `10.13.13.1`
-- [ ] Add entrypoint script to `docker-compose.yml` WireGuard service
-- [ ] Ensure idempotent (don't regenerate if keys exist)
-- [ ] **Verification:** Run `docker compose up`, check WireGuard logs show no "No valid tunnel config found" error, verify `wg show` displays interface
+- [x] Create initialization script for WireGuard container
+- [x] Auto-generate server private/public keys if not present in `/config/server/`
+- [x] Auto-populate `wg-config/wg_confs/wg0.conf` from `wg-config/templates/server.conf` template
+- [x] Use subnet `10.13.13.0/24` with server IP `10.13.13.1`
+- [x] Add entrypoint script to `docker-compose.yml` WireGuard service
+- [x] Ensure idempotent (don't regenerate if keys exist)
+- [x] **Verification:** Run `docker compose up`, check WireGuard logs show no "No valid tunnel config found" error, verify `wg show` displays interface
 
 **Milestone 2.2: Keycloak Realm, Client, and Test User Bootstrap**
 - [ ] Create Keycloak bootstrap script/container that runs on startup
